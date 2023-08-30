@@ -45,12 +45,21 @@ mesh1.position.y = -objectsDistance * 0;
 mesh2.position.y = -objectsDistance * 1;
 mesh3.position.y = -objectsDistance * 2;
 
+mesh1.position.x = 1;
+mesh2.position.x = 0;
+mesh3.position.x = -1;
+
+scene.add(mesh1, mesh2, mesh3);
+
+const sectionMeshes = [mesh1, mesh2, mesh3];
+
 /**
  * Light
  */
 
 const directionalLight = new THREE.DirectionalLight("#ffffff", 1);
 directionalLight.position.set(1, 1, 0);
+scene.add(directionalLight);
 gui.addFolder("Directional Light").add(directionalLight.position, "x").min(-5).max(5).step(0.01);
 
 /**
@@ -95,6 +104,14 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 /**
+ * Scroll
+ */
+let scrollY: number = window.scrollY;
+window.addEventListener("scroll", () => {
+  scrollY = window.scrollY;
+});
+
+/**
  * Animate
  */
 const clock = new THREE.Clock();
@@ -102,13 +119,20 @@ const clock = new THREE.Clock();
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
+  //update camera
+  camera.position.y = (-scrollY / sizes.height) * objectsDistance;
+
+  //animate meshes
+  sectionMeshes.forEach((mesh) => {
+    mesh.rotation.x = elapsedTime * 0.1;
+    mesh.rotation.y = elapsedTime * 0.12;
+  });
+
   // Render
   renderer.render(scene, camera);
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick);
 };
-
-scene.add(directionalLight, mesh1, mesh2, mesh3);
 
 tick();
