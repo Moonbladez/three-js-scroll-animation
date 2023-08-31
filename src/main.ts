@@ -15,9 +15,10 @@ const parameters = {
 };
 
 gui.addColor(parameters, "materialColor").onChange(() => {
-  material.color.set(parameters.materialColor);
+  const { materialColor } = parameters;
+  material.color.set(materialColor);
+  particlesMaterial.color.set(materialColor);
 });
-
 /**
  * Base
  */
@@ -32,6 +33,7 @@ const scene = new THREE.Scene();
  */
 // texture
 const gradientTexture = textureLoader.load("/textures/gradients/5.jpg");
+const particalTexture = textureLoader.load("/textures/particles/10.png");
 gradientTexture.magFilter = THREE.NearestFilter;
 
 const material = new THREE.MeshToonMaterial({ color: parameters.materialColor, gradientMap: gradientTexture });
@@ -52,6 +54,43 @@ mesh3.position.x = -1;
 scene.add(mesh1, mesh2, mesh3);
 
 const sectionMeshes = [mesh1, mesh2, mesh3];
+
+/**
+ * Particles
+ */
+// Geometry
+const particlesCount = 500;
+const positions = new Float32Array(particlesCount * 3);
+
+for (let i = 0; i < particlesCount; i++) {
+  positions[i * 3 + 0] = Math.random();
+  positions[i * 3 + 1] = Math.random();
+  positions[i * 3 + 2] = Math.random();
+}
+
+const particlesGeometry = new THREE.BufferGeometry();
+particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+// Material
+const particlesMaterial = new THREE.PointsMaterial({
+  alphaMap: particalTexture,
+  color: parameters.materialColor,
+  sizeAttenuation: true,
+  size: 0.2,
+  transparent: true,
+  alphaTest: 0.001,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+
+for (let i = 0; i < particlesCount; i++) {
+  positions[i * 3 + 0] = (Math.random() - 0.5) * 10;
+  positions[i * 3 + 1] = objectsDistance * 0.5 - Math.random() * objectsDistance * sectionMeshes.length;
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+}
+scene.add(particles);
 
 /**
  * Light
@@ -131,17 +170,20 @@ window.addEventListener("mousemove", (event) => {
  * Animate
  */
 const clock = new THREE.Clock();
+let previousTime: number = 0;
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+  const deltaTime = elapsedTime - previousTime;
+  previousTime = elapsedTime;
 
   //update camera
   camera.position.y = (-scrollY / sizes.height) * objectsDistance;
 
   const parallaxX: number = cursor.x;
   const parallaxY: number = -cursor.y;
-  cameraGroup.position.x = parallaxX;
-  cameraGroup.position.z = parallaxY;
+  cameraGroup.position.x += (parallaxX - cameraGroup.position.x) * deltaTime;
+  cameraGroup.position.y += (parallaxY - cameraGroup.position.y) * deltaTime;
 
   //animate meshes
   sectionMeshes.forEach((mesh) => {
