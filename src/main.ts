@@ -13,6 +13,7 @@ const objectsDistance = 4;
 const particlesFolder = gui.addFolder("Particles").close();
 const lightFolder = gui.addFolder("Light").close();
 const materialFolder = gui.addFolder("Material").close();
+const textElements = document.querySelectorAll(".text-section");
 
 const parameters = {
   materialColor: "#ff80f4",
@@ -182,6 +183,13 @@ window.addEventListener("scroll", () => {
       z: "+=1.5",
       ease: "power3.out",
     });
+
+    animateTextIn(textElements[currentSection]);
+    textElements.forEach((element, idx) => {
+      if (idx !== currentSection) {
+        animateTextOut(element);
+      }
+    });
   }
 });
 
@@ -232,3 +240,11 @@ const tick = () => {
 };
 
 tick();
+
+const animateTextIn = (element: Element) => {
+  gsap.fromTo(element, { x: "-100%", opacity: 0 }, { x: "0%", opacity: 1, duration: 1, ease: "power3.out" });
+};
+
+const animateTextOut = (element: Element) => {
+  gsap.to(element, { x: "-100%", opacity: 0, duration: 1, ease: "power3.out" });
+};
