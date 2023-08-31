@@ -9,12 +9,15 @@ THREE.ColorManagement.enabled = false;
 const gui = new GUI();
 const textureLoader = new THREE.TextureLoader();
 const objectsDistance = 4;
+const particlesFolder = gui.addFolder("Particles").close();
+const lightFolder = gui.addFolder("Light").close();
+const materialFolder = gui.addFolder("Material").close();
 
 const parameters = {
   materialColor: "#ff80f4",
+  particlesCount: 500,
 };
-
-gui.addColor(parameters, "materialColor").onChange(() => {
+materialFolder.addColor(parameters, "materialColor").onChange(() => {
   const { materialColor } = parameters;
   material.color.set(materialColor);
   particlesMaterial.color.set(materialColor);
@@ -59,10 +62,9 @@ const sectionMeshes = [mesh1, mesh2, mesh3];
  * Particles
  */
 // Geometry
-const particlesCount = 500;
-const positions = new Float32Array(particlesCount * 3);
+const positions = new Float32Array(parameters.particlesCount * 3);
 
-for (let i = 0; i < particlesCount; i++) {
+for (let i = 0; i < parameters.particlesCount; i++) {
   positions[i * 3 + 0] = Math.random();
   positions[i * 3 + 1] = Math.random();
   positions[i * 3 + 2] = Math.random();
@@ -85,11 +87,28 @@ const particlesMaterial = new THREE.PointsMaterial({
 
 const particles = new THREE.Points(particlesGeometry, particlesMaterial);
 
-for (let i = 0; i < particlesCount; i++) {
+for (let i = 0; i < parameters.particlesCount; i++) {
   positions[i * 3 + 0] = (Math.random() - 0.5) * 10;
   positions[i * 3 + 1] = objectsDistance * 0.5 - Math.random() * objectsDistance * sectionMeshes.length;
   positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
 }
+particlesFolder
+  .add(parameters, "particlesCount")
+  .min(100)
+  .max(1000)
+  .step(10)
+  .onChange(() => {
+    const { particlesCount } = parameters;
+    const positions = new Float32Array(particlesCount * 3);
+
+    for (let i = 0; i < particlesCount; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 1] = objectsDistance * 0.5 - Math.random() * objectsDistance * sectionMeshes.length;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+
+    particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  });
 scene.add(particles);
 
 /**
@@ -99,7 +118,7 @@ scene.add(particles);
 const directionalLight = new THREE.DirectionalLight("#ffffff", 1);
 directionalLight.position.set(1, 1, 0);
 scene.add(directionalLight);
-gui.addFolder("Directional Light").add(directionalLight.position, "x").min(-5).max(5).step(0.01);
+lightFolder.add(directionalLight.position, "x").min(-5).max(5).step(0.01);
 
 /**
  * Sizes
